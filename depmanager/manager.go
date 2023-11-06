@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,19 +16,25 @@ const (
 	initialFile = "../main.go"
 )
 
-var (
-	// GlobalPkgMap is the map of all the identified packages in the project dir
-	GlobalPkgMap map[string]bool = make(map[string]bool)
+// GlobalDirMap is the map of all the subdirectories in the project
+var GlobalDirMap map[string]bool = make(map[string]bool)
 
-	// GlobalFileHashMap is a map of files and the hashes of their imports.
-	// It is used to determine when to rebuild the dependency array(i.e when
-	// the imports change)
-	GlobalFileHashMap map[string][]byte = make(map[string][]byte)
-)
+// GlobalPkgMap is the map of all the identified packages in the project dir
+var GlobalPkgMap map[string]bool = make(map[string]bool)
+
+// GlobalFileHashMap is a map of files and the hashes of their imports.
+// It is used to determine when to rebuild the dependency array(i.e when
+// the imports change)
+var GlobalFileHashMap map[string][]byte = make(map[string][]byte)
 
 // BuildDeps takes a file and returns a list of the dependencies of the
 // file along with their dependencies
 func BuildDeps(file string) {
+	err := buildGlobalDirMap("..")
+	if err != nil {
+		panic(err)
+	}
+
 	workFile, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -37,6 +45,22 @@ func BuildDeps(file string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func buildGlobalDirMap(currDir string) error {
+	err := filepath.WalkDir(currDir, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			GlobalDirMap[d.Name()] = true
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func buildDepPackages(file *os.File) error {
@@ -53,6 +77,7 @@ func buildDepPackages(file *os.File) error {
 		if !isValidDep(dep) {
 			continue
 		} else {
+			dep = findPath(dep)
 			if !GlobalPkgMap[dep] {
 				GlobalPkgMap[dep] = true
 				tempDepArr = append(tempDepArr, dep)
@@ -63,7 +88,12 @@ func buildDepPackages(file *os.File) error {
 	}
 
 	for _, pkg := range tempDepArr {
-		for _, file := range fetchFiles(pkg) {
+		files, err := fetchFiles(pkg)
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
 			f, err := os.Open(file)
 			if err != nil {
 				return err
@@ -77,7 +107,35 @@ func buildDepPackages(file *os.File) error {
 	return nil
 }
 
-func fetchFiles(pkg string) []string {}
+func findPath(dep string) string {
+	for k := range GlobalDirMap {
+		if strings.HasSuffix(k, dep) {
+			return k
+		}
+	}
+
+	return ""
+}
+
+func fetchFiles(pkg string) ([]string, error) {
+	files := []string{}
+
+	err := filepath.WalkDir(pkg, func(path string, d fs.DirEntry, err error) error {
+		if !d.IsDir() {
+			path := pkg + "/" + d.Name()
+
+			files = append(files, path)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return files, err
+	}
+
+	return files, nil
+}
 
 func hashFileDeps(fileDeps []string) []byte {
 	hasher := sha1.New()
