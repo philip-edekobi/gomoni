@@ -12,15 +12,12 @@ import (
 	"strings"
 )
 
-const (
-	initialFile = "../main.go"
-)
-
 // GlobalDirMap is the map of all the subdirectories in the project
 var GlobalDirMap map[string]bool = make(map[string]bool)
 
 // GlobalPkgMap is the map of all the identified packages in the project dir
-var GlobalPkgMap map[string]bool = make(map[string]bool)
+// to their file paths
+var GlobalPkgMap map[string]string = make(map[string]string)
 
 // GlobalFileHashMap is a map of files and the hashes of their imports.
 // It is used to determine when to rebuild the dependency array(i.e when
@@ -47,20 +44,21 @@ func BuildGlobalDirMap(currDir string) error {
 
 // BuildDeps takes a file and returns a list of the dependencies of the
 // file along with their dependencies
-func BuildDeps(file string) {
-	workFile, err := os.Open(file)
+func BuildDeps(dir string) {
+	mainFile := dir + "/main.go"
+	workFile, err := os.Open(mainFile)
 	if err != nil {
 		panic(err)
 	}
 	defer workFile.Close()
 
-	err = buildDepPackages(workFile)
+	err = buildDepPackages(workFile, dir)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func buildDepPackages(file *os.File) error {
+func buildDepPackages(file *os.File, dirCtx string) error {
 	tempDepArr := []string{}
 
 	fileDeps, err := extractImports(file)
@@ -71,13 +69,15 @@ func buildDepPackages(file *os.File) error {
 	GlobalFileHashMap[file.Name()] = hashFileDeps(fileDeps)
 
 	for _, dep := range fileDeps {
-		if !isValidDep(dep) {
+		if !isValidDep(dep, dirCtx) {
 			continue
 		} else {
-			dep = findPath(dep)
-			if !GlobalPkgMap[dep] {
-				GlobalPkgMap[dep] = true
-				tempDepArr = append(tempDepArr, dep)
+			depPath := findPath(dep)
+
+			_, ok := GlobalPkgMap[dep]
+			if !ok {
+				GlobalPkgMap[dep] = depPath
+				tempDepArr = append(tempDepArr, depPath)
 			} else {
 				continue
 			}
@@ -97,7 +97,7 @@ func buildDepPackages(file *os.File) error {
 			}
 			defer f.Close()
 
-			buildDepPackages(f)
+			buildDepPackages(f, dirCtx)
 		}
 	}
 
@@ -119,8 +119,6 @@ func fetchFiles(pkg string) ([]string, error) {
 
 	err := filepath.WalkDir(pkg, func(path string, d fs.DirEntry, err error) error {
 		if !d.IsDir() {
-			path := pkg + "/" + d.Name()
-
 			files = append(files, path)
 		}
 
@@ -144,10 +142,11 @@ func hashFileDeps(fileDeps []string) []byte {
 	return hasher.Sum(nil)
 }
 
-func isValidDep(dep string) bool {
+func isValidDep(dep, dirCtx string) bool {
 	dep = strings.TrimSpace(dep)
 
 	cmd := exec.Command("go", "list", "-m")
+	cmd.Dir = dirCtx
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)

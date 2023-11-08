@@ -20,7 +20,14 @@ func TestGlobalDirMap(t *testing.T) {
 }
 
 func TestBuildDeps(t *testing.T) {
-	BuildDeps("test_file1.go")
+	expectedPkgMap := make(map[string]string)
+	expectedPkgMap["test_proj/calc"] = "/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/calc"
+	expectedPkgMap["test_proj/calc/mul"] = "/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/calc/mul"
+	expectedPkgMap["test_proj/out"] = "/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/out"
+
+	BuildDeps("/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj")
+
+	require.Equal(t, expectedPkgMap, GlobalPkgMap)
 }
 
 func TestExtractImports(t *testing.T) {
@@ -73,6 +80,6 @@ func TestIsValidDep(t *testing.T) {
 
 	for _, tc := range testCases {
 		//fmt.Println(tc.dep)
-		require.Equal(t, tc.isValid, isValidDep(tc.dep))
+		require.Equal(t, tc.isValid, isValidDep(tc.dep, "."))
 	}
 }
