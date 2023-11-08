@@ -7,6 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGlobalDirMap(t *testing.T) {
+	expectedDirMap := make(map[string]bool)
+	expectedDirMap["/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj"] = true
+	expectedDirMap["/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/calc"] = true
+	expectedDirMap["/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/out"] = true
+	expectedDirMap["/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj/calc/mul"] = true
+
+	BuildGlobalDirMap("/home/luxurydev/Desktop/work/projects/gomoni/depmanager/test_proj")
+
+	require.Equal(t, expectedDirMap, GlobalDirMap)
+}
+
 func TestBuildDeps(t *testing.T) {
 	BuildDeps("test_file1.go")
 }

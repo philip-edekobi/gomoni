@@ -27,30 +27,12 @@ var GlobalPkgMap map[string]bool = make(map[string]bool)
 // the imports change)
 var GlobalFileHashMap map[string][]byte = make(map[string][]byte)
 
-// BuildDeps takes a file and returns a list of the dependencies of the
-// file along with their dependencies
-func BuildDeps(file string) {
-	err := buildGlobalDirMap("..")
-	if err != nil {
-		panic(err)
-	}
-
-	workFile, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
-	defer workFile.Close()
-
-	err = buildDepPackages(workFile)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func buildGlobalDirMap(currDir string) error {
+// BuildGlobalDirMap is a function that constructs a map that contains all
+// the files and directories in the currDir argument passed to it
+func BuildGlobalDirMap(currDir string) error {
 	err := filepath.WalkDir(currDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
-			GlobalDirMap[d.Name()] = true
+			GlobalDirMap[path] = true
 		}
 
 		return nil
@@ -61,6 +43,21 @@ func buildGlobalDirMap(currDir string) error {
 	}
 
 	return nil
+}
+
+// BuildDeps takes a file and returns a list of the dependencies of the
+// file along with their dependencies
+func BuildDeps(file string) {
+	workFile, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	defer workFile.Close()
+
+	err = buildDepPackages(workFile)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func buildDepPackages(file *os.File) error {
