@@ -1,0 +1,4 @@
+package filewatcher
+
+func AttachWatchers() {
+}

@@ -11,24 +11,22 @@ import (
 const mainFile = "main.go"
 
 func main() {
-	workFolder, err := os.Getwd()
+	workDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("an error occured: %v", err)
 	}
 
 	if len(os.Args) > 1 {
-		workFolder, err = filepath.Abs(os.Args[1])
+		workDir, err = filepath.Abs(os.Args[1])
 		if err != nil {
 			log.Fatalf("an error occured: %v", err)
 		}
 	}
 
-	workFile := workFolder + "/" + mainFile
-
-	err = depmanager.BuildGlobalDirMap(workFolder)
+	err = depmanager.BuildGlobalDirMap(workDir)
 	if err != nil {
 		log.Fatalf("could not build global directory map: %v", err)
 	}
 
-	depmanager.BuildDeps(workFile)
+	depmanager.BuildDeps(workDir)
 }

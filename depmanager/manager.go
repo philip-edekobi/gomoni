@@ -9,14 +9,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
-// GlobalDirMap is the map of all the subdirectories in the project
+// GlobalDirMap is a map of all possible directory paths in the entire project scope
 var GlobalDirMap map[string]bool = make(map[string]bool)
 
 // GlobalPkgMap is the map of all the identified packages in the project dir
-// to their file paths
+// to the dir file paths
 var GlobalPkgMap map[string]string = make(map[string]string)
 
 // GlobalFileHashMap is a map of files and the hashes of their imports.
@@ -34,7 +35,6 @@ func BuildGlobalDirMap(currDir string) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -46,27 +46,28 @@ func BuildGlobalDirMap(currDir string) error {
 // file along with their dependencies
 func BuildDeps(dir string) {
 	mainFile := dir + "/main.go"
-	workFile, err := os.Open(mainFile)
-	if err != nil {
-		panic(err)
-	}
-	defer workFile.Close()
 
-	err = buildDepPackages(workFile, dir)
+	err := buildDepPackages(mainFile, dir)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func buildDepPackages(file *os.File, dirCtx string) error {
+func buildDepPackages(workFile string, dirCtx string) error {
 	tempDepArr := []string{}
+
+	file, err := os.Open(workFile)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
 
 	fileDeps, err := extractImports(file)
 	if err != nil {
 		return err
 	}
 
-	GlobalFileHashMap[file.Name()] = hashFileDeps(fileDeps)
+	GlobalFileHashMap[workFile] = hashFileDeps(fileDeps)
 
 	for _, dep := range fileDeps {
 		if !isValidDep(dep, dirCtx) {
@@ -85,19 +86,13 @@ func buildDepPackages(file *os.File, dirCtx string) error {
 	}
 
 	for _, pkg := range tempDepArr {
-		files, err := fetchFiles(pkg)
+		files, err := FetchFiles(pkg)
 		if err != nil {
 			return err
 		}
 
 		for _, file := range files {
-			f, err := os.Open(file)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			buildDepPackages(f, dirCtx)
+			buildDepPackages(file, dirCtx)
 		}
 	}
 
@@ -114,7 +109,9 @@ func findPath(dep string) string {
 	return ""
 }
 
-func fetchFiles(pkg string) ([]string, error) {
+// FetchFiles is a function that scans a directory and returns an array of the path of all
+// the files in the dir
+func FetchFiles(pkg string) ([]string, error) {
 	files := []string{}
 
 	err := filepath.WalkDir(pkg, func(path string, d fs.DirEntry, err error) error {
@@ -124,7 +121,6 @@ func fetchFiles(pkg string) ([]string, error) {
 
 		return nil
 	})
-
 	if err != nil {
 		return files, err
 	}
@@ -205,6 +201,7 @@ func extractImports(file *os.File) ([]string, error) {
 		}
 	}
 
+	sort.Strings(imports)
 	return imports, nil
 }
 
