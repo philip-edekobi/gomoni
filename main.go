@@ -6,9 +6,12 @@ import (
 	"path/filepath"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
+	"github.com/philip-edekobi/gomoni/processmanager"
 )
 
 const mainFile = "main.go"
+
+var proc *os.Process
 
 func main() {
 	workDir, err := os.Getwd()
@@ -29,4 +32,12 @@ func main() {
 	}
 
 	depmanager.BuildDeps(workDir)
+
+	go func() {
+		proc, err = processmanager.Run(workDir + mainFile)
+
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
