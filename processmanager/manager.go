@@ -7,10 +7,8 @@ import (
 
 var arg0 string = "go"
 
-// RunFile is a function that starts executing a file in a new process and returns
-// a pointer to a exec.Cmd struct, file representing the stdout and stderr of the process
-// and an error
-
+// RunFile is a function that starts executing a file in a new process and
+// returns a pointer to a exec.Cmd and an error
 func Run(file string) (*os.Process, error) {
 	args := []string{"", "run", file}
 

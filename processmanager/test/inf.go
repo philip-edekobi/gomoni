@@ -2,18 +2,26 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 func main() {
-	fmt.Println("running")
+	file, err := os.Create("file.test")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = fmt.Fprintln(file, "running")
+	file.Close()
+
 	a := make(chan int)
 
 	for {
 		select {
 		case <-a:
-			fmt.Print("ahoy")
-			break
+			return
 		default:
+			continue
 		}
 	}
 }
