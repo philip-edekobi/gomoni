@@ -1,7 +1,6 @@
 package depmanager
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -107,7 +106,6 @@ func TestFetchFiles(t *testing.T) {
 		files, err := FetchFiles(testCase.dir)
 
 		require.Nil(t, err)
-		fmt.Println(files)
 		require.Equal(t, testCase.expectedFiles, files)
 	}
 }
