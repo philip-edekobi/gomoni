@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
-	"github.com/philip-edekobi/gomoni/processmanager"
 )
 
 const mainFile = "main.go"
@@ -32,12 +32,15 @@ func main() {
 	}
 
 	depmanager.BuildDeps(workDir)
+	fmt.Println(depmanager.GlobalPkgMap)
 
-	go func() {
-		proc, err = processmanager.Run(workDir + mainFile)
+	/*
+		  go func() {
+				proc, err = processmanager.Run(workDir + mainFile)
 
-		if err != nil {
-			panic(err)
-		}
-	}()
+				if err != nil {
+					panic(err)
+				}
+			}()
+	*/
 }

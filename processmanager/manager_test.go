@@ -32,12 +32,15 @@ func TestRun(t *testing.T) {
 		proc, err := Run(testCase.testFile)
 		require.Nil(t, err)
 
-		time.Sleep(3)
+		if !testCase.isInfinite {
+			err = proc.Kill()
+			require.Nil(t, err)
+		} else {
+			time.Sleep(time.Duration(3) * time.Second)
 
-		err = proc.Kill()
-		require.Nil(t, err)
+			err = proc.Kill()
+			require.Nil(t, err)
 
-		if testCase.isInfinite {
 			file := testLoc + "file.test"
 			lines := []string{}
 

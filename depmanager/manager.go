@@ -16,7 +16,7 @@ import (
 // GlobalDirMap is a map of all possible directory paths in the entire project scope
 var GlobalDirMap map[string]bool = make(map[string]bool)
 
-// GlobalPkgMap is the map of all the identified packages in the project dir
+// GlobalPkgMap is the map of all imported packages in the project files
 // to the dir file paths
 var GlobalPkgMap map[string]string = make(map[string]string)
 
@@ -72,17 +72,19 @@ func buildDepPackages(workFile string, dirCtx string) error {
 	for _, dep := range fileDeps {
 		if !isValidDep(dep, dirCtx) {
 			continue
-		} else {
-			depPath := findPath(dep)
-
-			_, ok := GlobalPkgMap[dep]
-			if !ok {
-				GlobalPkgMap[dep] = depPath
-				tempDepArr = append(tempDepArr, depPath)
-			} else {
-				continue
-			}
 		}
+
+		depPath := findPath(dep, dirCtx)
+
+		_, ok := GlobalPkgMap[dep]
+
+		if !ok && depPath != "" {
+			GlobalPkgMap[dep] = depPath
+			tempDepArr = append(tempDepArr, depPath)
+		} else {
+			continue
+		}
+
 	}
 
 	for _, pkg := range tempDepArr {
@@ -99,7 +101,17 @@ func buildDepPackages(workFile string, dirCtx string) error {
 	return nil
 }
 
-func findPath(dep string) string {
+func findPath(dep, dirCtx string) string {
+	cmd := exec.Command("go", "list", "-m")
+	cmd.Dir = dirCtx
+	out, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dep = strings.ReplaceAll(dep, string(out), "")
+	dep = strings.TrimSpace(dep)
+
 	for k := range GlobalDirMap {
 		if strings.HasSuffix(k, dep) {
 			return k

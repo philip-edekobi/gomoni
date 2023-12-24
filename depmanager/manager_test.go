@@ -1,6 +1,7 @@
 package depmanager
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -79,7 +80,34 @@ func TestIsValidDep(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		//fmt.Println(tc.dep)
+		// fmt.Println(tc.dep)
 		require.Equal(t, tc.isValid, isValidDep(tc.dep, "."))
+	}
+}
+
+func TestFetchFiles(t *testing.T) {
+	testCases := []struct {
+		dir           string
+		expectedFiles []string
+	}{
+		{"emp", []string{}},
+		{
+			"test_proj",
+			[]string{
+				"test_proj/calc/calc.go",
+				"test_proj/calc/mul/mul.go",
+				"test_proj/go.mod",
+				"test_proj/main.go",
+				"test_proj/out/out.go",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		files, err := FetchFiles(testCase.dir)
+
+		require.Nil(t, err)
+		fmt.Println(files)
+		require.Equal(t, testCase.expectedFiles, files)
 	}
 }
