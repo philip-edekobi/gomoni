@@ -109,7 +109,7 @@ func findPath(dep, dirCtx string) string {
 		log.Fatal(err)
 	}
 
-	dep = strings.ReplaceAll(dep, string(out), "")
+	dep = strings.ReplaceAll(dep, strings.TrimSpace(string(out)), "")
 	dep = strings.TrimSpace(dep)
 
 	for k := range GlobalDirMap {
