@@ -36,7 +36,7 @@ func TestExtractImports(t *testing.T) {
 		Imports  []string
 	}{
 		{"test_file1.go", []string{"fmt"}},
-		{"test_file2.go", []string{"fmt", "net/http", "time"}},
+		{"test_file2.go", []string{"fmt", "net", "net/http", "time"}},
 		{"test_file3.go", []string{}},
 	}
 
