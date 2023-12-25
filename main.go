@@ -1,17 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
+	"github.com/philip-edekobi/gomoni/processmanager"
 )
 
 const mainFile = "main.go"
 
 var proc *os.Process
+
+// ExitCh is a channel that controls the life of the program.
+// It waits for a value which when sent indicated that the program should end
+var ExitCh = make(chan int, 1)
 
 func main() {
 	workDir, err := os.Getwd()
@@ -32,15 +36,11 @@ func main() {
 	}
 
 	depmanager.BuildDeps(workDir)
-	fmt.Println(depmanager.GlobalPkgMap)
 
-	/*
-		  go func() {
-				proc, err = processmanager.Run(workDir + mainFile)
+	_, err = processmanager.Run(workDir+"/"+mainFile, workDir)
+	if err != nil {
+		panic(err)
+	}
 
-				if err != nil {
-					panic(err)
-				}
-			}()
-	*/
+	<-ExitCh
 }
