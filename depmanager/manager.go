@@ -53,7 +53,7 @@ func BuildDeps(dir string) {
 	}
 }
 
-func buildDepPackages(workFile string, dirCtx string) error {
+func buildDepPackages(workFile, dirCtx string) error {
 	tempDepArr := []string{}
 
 	file, err := os.Open(workFile)
@@ -84,7 +84,6 @@ func buildDepPackages(workFile string, dirCtx string) error {
 		} else {
 			continue
 		}
-
 	}
 
 	for _, pkg := range tempDepArr {
