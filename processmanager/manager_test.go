@@ -3,6 +3,7 @@ package processmanager
 import (
 	"bufio"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -17,19 +18,22 @@ func TestRun(t *testing.T) {
 		expectedOutput string
 		testFile       string
 		isInfinite     bool
+		dir            string
 	}{
 		{
 			expectedOutput: "Hello World",
 			testFile:       testLoc + "main.go",
+			dir:            testLoc,
 		},
 		{
 			isInfinite: true,
 			testFile:   testLoc + "inf.go",
+			dir:        testLoc,
 		},
 	}
 
 	for _, testCase := range testCases {
-		proc, err := Run(testCase.testFile)
+		proc, err := Run(testCase.testFile, testCase.dir)
 		require.Nil(t, err)
 
 		if !testCase.isInfinite {
@@ -56,9 +60,32 @@ func TestRun(t *testing.T) {
 			text := strings.Join(lines, "")
 
 			require.Equal(t, "running", strings.TrimSpace(text))
-
-			err = os.Remove("file.test")
-			require.Nil(t, err)
 		}
 	}
+}
+
+func TestKill(t *testing.T) {
+	args := []string{""}
+
+	path, err := exec.LookPath("cat")
+	require.Nil(t, err)
+
+	args[0] = path
+
+	var procAttr os.ProcAttr
+	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
+
+	proc, err := os.StartProcess(args[0], args, &procAttr)
+	require.Nil(t, err)
+
+	k := make(chan int, 1)
+	e := make(chan int, 1)
+
+	k <- 1
+
+	Kill(proc, k, e)
+
+	val := <-e
+
+	require.Equal(t, 1, val)
 }

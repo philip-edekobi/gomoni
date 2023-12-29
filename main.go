@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
 	"github.com/philip-edekobi/gomoni/processmanager"
@@ -16,6 +17,9 @@ var proc *os.Process
 // ExitCh is a channel that controls the life of the program.
 // It waits for a value which when sent indicated that the program should end
 var ExitCh = make(chan int, 1)
+
+// KillCh is a channel that waits for a signal to kill a process
+var KillCh = make(chan int, 1)
 
 func main() {
 	workDir, err := os.Getwd()
@@ -37,10 +41,15 @@ func main() {
 
 	depmanager.BuildDeps(workDir)
 
-	_, err = processmanager.Run(workDir+"/"+mainFile, workDir)
+	proc, err = processmanager.Run(workDir+"/"+mainFile, workDir)
 	if err != nil {
 		panic(err)
 	}
+	go processmanager.Kill(proc, KillCh, ExitCh)
 
+	t := time.After(4 * time.Second)
+	<-t
+
+	KillCh <- 1
 	<-ExitCh
 }

@@ -1,4 +1,7 @@
 package filewatcher
 
-func AttachWatchers() {
-}
+// func AttachWatchers(fileMap map[string]string) {
+//   for _, dir := fileMap {
+//
+//   }
+// }

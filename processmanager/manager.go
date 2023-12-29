@@ -30,3 +30,16 @@ func Run(file, dirCtx string) (*os.Process, error) {
 
 	return proc, nil
 }
+
+func Kill(proc *os.Process, killCh <-chan int, exitCh chan<- int) error {
+	<-killCh
+
+	err := proc.Kill()
+	if err != nil {
+		return err
+	}
+
+	exitCh <- 1
+
+	return nil
+}
