@@ -12,8 +12,6 @@ import (
 
 const mainFile = "main.go"
 
-var proc *os.Process
-
 // ExitCh is a channel that controls the life of the program.
 // It waits for a value which when sent indicated that the program should end
 var ExitCh = make(chan int, 1)
@@ -41,7 +39,7 @@ func main() {
 
 	depmanager.BuildDeps(workDir)
 
-	proc, err = processmanager.Run(workDir+"/"+mainFile, workDir)
+	proc, err := processmanager.Run(workDir+"/"+mainFile, workDir)
 	if err != nil {
 		panic(err)
 	}
