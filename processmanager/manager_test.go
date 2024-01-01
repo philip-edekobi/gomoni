@@ -45,7 +45,7 @@ func TestRun(t *testing.T) {
 			err = proc.Kill()
 			require.Nil(t, err)
 
-			file := testLoc + "file.test"
+			file := testLoc + "../test_inf/file.test"
 			lines := []string{}
 
 			f, err := os.Open(file)
