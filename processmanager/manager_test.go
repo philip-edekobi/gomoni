@@ -27,8 +27,8 @@ func TestRun(t *testing.T) {
 		},
 		{
 			isInfinite: true,
-			testFile:   testLoc + "inf.go",
-			dir:        testLoc,
+			testFile:   testLoc + "../test_inf/inf.go",
+			dir:        testLoc + "../test_inf",
 		},
 	}
 
