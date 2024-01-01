@@ -78,14 +78,12 @@ func TestKill(t *testing.T) {
 	proc, err := os.StartProcess(args[0], args, &procAttr)
 	require.Nil(t, err)
 
-	k := make(chan int, 1)
-	e := make(chan int, 1)
+	k := make(chan int, 2)
 
 	k <- 1
+	k <- 2
 
-	Kill(proc, k, e)
+	Kill(proc, k)
 
-	val := <-e
-
-	require.Equal(t, 1, val)
+	require.Equal(t, 2, <-k)
 }

@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go processmanager.Kill(proc, KillCh, ExitCh)
+	go processmanager.Kill(proc, KillCh)
 
 	t := time.After(4 * time.Second)
 	<-t
