@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
+	"github.com/philip-edekobi/gomoni/filewatcher"
 	"github.com/philip-edekobi/gomoni/processmanager"
 )
 
@@ -40,6 +41,9 @@ func main() {
 
 	depmanager.BuildDeps(workDir)
 
+	filewatcher.Initialize()
+	go filewatcher.WatchFiles(depmanager.GlobalPkgMap)
+
 	fmt.Println("[gomoni] - Starting...")
 	proc, err := processmanager.Run(workDir+"/"+mainFile, workDir)
 	if err != nil {
@@ -52,6 +56,6 @@ func main() {
 	t := time.After(4 * time.Second)
 	<-t
 
-	KillCh <- 1
+	// KillCh <- 1
 	<-ExitCh
 }
