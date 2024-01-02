@@ -1,23 +1,29 @@
 package processmanager
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 )
 
-var arg0 string = "go"
+var (
+	arg0    string = "go"
+	tmpFile string = "temp_prog_00000"
+)
 
 // RunFile is a function that starts executing a file in a new process and
 // returns a pointer to a exec.Cmd and an error
 func Run(file, dirCtx string) (*os.Process, error) {
-	cmd := exec.Command("go", "build", "-o", "temp_prog_00000")
+	fmt.Println("[gomoni] - building")
+	cmd := exec.Command("go", "build", "-o", tmpFile)
 	cmd.Dir = dirCtx
 	err := cmd.Run()
 	if err != nil {
 		return nil, err
 	}
 
-	cmd = exec.Command("./temp_prog_00000")
+	fmt.Println("[gomoni] - running...")
+	cmd = exec.Command("./" + tmpFile)
 	cmd.Dir = dirCtx
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -57,4 +63,20 @@ func Kill(proc *os.Process, killCh <-chan int) error {
 	}
 
 	return nil
+}
+
+func WatchForEnd(proc *os.Process, dirCtx string) {
+	procState, err := proc.Wait()
+	if err != nil {
+		panic(err)
+	}
+
+	if procState.Exited() {
+		fmt.Println("[gomoni] - exit... waiting for changes to restart")
+	}
+
+	err = os.Remove(dirCtx + "/" + tmpFile)
+	if err != nil {
+		panic(err)
+	}
 }

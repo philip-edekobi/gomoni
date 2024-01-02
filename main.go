@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -39,10 +40,13 @@ func main() {
 
 	depmanager.BuildDeps(workDir)
 
+	fmt.Println("[gomoni] - Starting...")
 	proc, err := processmanager.Run(workDir+"/"+mainFile, workDir)
 	if err != nil {
 		panic(err)
 	}
+
+	go processmanager.WatchForEnd(proc, workDir)
 	go processmanager.Kill(proc, KillCh)
 
 	t := time.After(4 * time.Second)
