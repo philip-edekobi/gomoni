@@ -41,6 +41,14 @@ func main() {
 
 	depmanager.BuildDeps(workDir)
 
+	// add the main files to the list of dependencies to watch
+	mainLoc, err := filepath.Abs(workDir + "/" + mainFile)
+	if err != nil {
+		panic(err)
+	}
+
+	depmanager.GlobalPkgMap[""] = mainLoc
+
 	filewatcher.Initialize()
 	go filewatcher.WatchFiles(depmanager.GlobalPkgMap)
 
