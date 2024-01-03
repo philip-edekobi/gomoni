@@ -240,3 +240,7 @@ func removeQuote(line string) string {
 
 	return string(quote)
 }
+
+func EmptyPkgMap() {
+	GlobalPkgMap = make(map[string]string)
+}

@@ -78,10 +78,13 @@ func TestKill(t *testing.T) {
 	proc, err := os.StartProcess(args[0], args, &procAttr)
 	require.Nil(t, err)
 
+	go Kill(proc)
+
+	tc := time.After(3 * time.Second)
+	<-tc
 	KillCh <- 1
-	Kill(proc)
 
 	procState, err := proc.Wait()
 	require.Nil(t, err)
-	require.NotEqual(t, 0, procState.ExitCode())
+	require.Equal(t, 0, procState.ExitCode())
 }

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"syscall"
+
+	"github.com/philip-edekobi/gomoni/types"
 )
 
 var (
@@ -27,6 +30,7 @@ func Run(file, dirCtx string) (*os.Process, error) {
 
 	fmt.Println("[gomoni] - running...")
 	cmd = exec.Command("./" + tmpFile)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Dir = dirCtx
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -60,7 +64,8 @@ func Run(file, dirCtx string) (*os.Process, error) {
 func Kill(proc *os.Process) error {
 	<-KillCh
 
-	err := proc.Kill()
+	// err := proc.Kill()
+	err := syscall.Kill(-proc.Pid, syscall.SIGKILL)
 	if err != nil {
 		panic(err)
 	}
@@ -68,13 +73,13 @@ func Kill(proc *os.Process) error {
 	return nil
 }
 
-func Restart(proc *os.Process, file, dirCtx string) error {
+func Restart(monitor *types.Monitor, file, dirCtx string) error {
 	p, err := Run(file, dirCtx)
 	if err != nil {
 		panic(err)
 	}
 
-	proc = p
+	monitor.CurrentProcess = p
 	return nil
 }
 

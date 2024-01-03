@@ -109,3 +109,9 @@ func TestFetchFiles(t *testing.T) {
 		require.Equal(t, testCase.expectedFiles, files)
 	}
 }
+
+func TestEmptyPkgMap(t *testing.T) {
+	EmptyPkgMap()
+
+	require.Empty(t, GlobalPkgMap)
+}

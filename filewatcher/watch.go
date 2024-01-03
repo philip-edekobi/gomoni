@@ -1,21 +1,22 @@
 package filewatcher
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
 	"github.com/philip-edekobi/gomoni/processmanager"
+	"github.com/philip-edekobi/gomoni/types"
 )
 
 var (
 	globalWatcher *fsnotify.Watcher = nil
 	dirCtx        string
-	process       *os.Process
+	monitor       *types.Monitor
 )
 
-func Initialize(proc *os.Process, dir string) {
+func Initialize(mon *types.Monitor, dir string) {
 	dirCtx = dir
 
 	watcher, err := fsnotify.NewWatcher()
@@ -24,7 +25,7 @@ func Initialize(proc *os.Process, dir string) {
 	}
 
 	globalWatcher = watcher
-	process = proc
+	monitor = mon
 }
 
 func Close() {
@@ -66,13 +67,15 @@ func WatchFiles(fileMap map[string]string) {
 			if event.Op&fsnotify.Write == fsnotify.Write {
 				// fmt.Println("CHANGEEEEEE")
 				removeWatchers(depmanager.GlobalPkgMap)
+				processmanager.KillCh <- 1
+				depmanager.EmptyPkgMap()
 				depmanager.BuildDeps(dirCtx)
 				attachWatchers(depmanager.GlobalPkgMap)
-				processmanager.KillCh <- 1
-				processmanager.Restart(process, "main.go", dirCtx)
+				fmt.Println("[gomoni] - changes detected, restarting...")
+				processmanager.Restart(monitor, "main.go", dirCtx)
 
-				go processmanager.WatchForEnd(process, dirCtx)
-				go processmanager.Kill(process)
+				go processmanager.WatchForEnd(monitor.CurrentProcess, dirCtx)
+				go processmanager.Kill(monitor.CurrentProcess)
 			}
 		case err, ok := <-globalWatcher.Errors:
 			if !ok {
