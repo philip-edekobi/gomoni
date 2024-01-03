@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+var workDir string
+
 // GlobalDirMap is a map of all possible directory paths in the entire project scope
 var GlobalDirMap map[string]bool = make(map[string]bool)
 
@@ -46,14 +48,16 @@ func BuildGlobalDirMap(currDir string) error {
 // file along with their dependencies
 func BuildDeps(dir string) {
 	mainFile := dir + "/main.go"
+	workDir = dir
 
-	err := buildDepPackages(mainFile, dir)
+	err := buildDepPackages(mainFile)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func buildDepPackages(workFile, dirCtx string) error {
+func buildDepPackages(workFile string) error {
+	dirCtx := workDir
 	tempDepArr := []string{}
 
 	file, err := os.Open(workFile)
@@ -93,7 +97,7 @@ func buildDepPackages(workFile, dirCtx string) error {
 		}
 
 		for _, file := range files {
-			buildDepPackages(file, dirCtx)
+			buildDepPackages(file)
 		}
 	}
 

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/philip-edekobi/gomoni/depmanager"
 	"github.com/philip-edekobi/gomoni/filewatcher"
@@ -18,8 +17,7 @@ const mainFile = "main.go"
 // It waits for a value which when sent indicated that the program should end
 var ExitCh = make(chan int, 1)
 
-// KillCh is a channel that waits for a signal to kill a process
-var KillCh = make(chan int, 1)
+var currentProcess *os.Process
 
 func main() {
 	workDir, err := os.Getwd()
@@ -42,21 +40,20 @@ func main() {
 	depmanager.BuildDeps(workDir)
 	depmanager.GlobalPkgMap["main"] = workDir
 
-	filewatcher.Initialize()
+	filewatcher.Initialize(currentProcess, workDir)
 	go filewatcher.WatchFiles(depmanager.GlobalPkgMap)
 
 	fmt.Println("[gomoni] - Starting...")
-	proc, err := processmanager.Run(workDir+"/"+mainFile, workDir)
+	currentProcess, err = processmanager.Run(workDir+"/"+mainFile, workDir)
 	if err != nil {
 		panic(err)
 	}
 
-	go processmanager.WatchForEnd(proc, workDir)
-	go processmanager.Kill(proc, KillCh)
+	go processmanager.WatchForEnd(currentProcess, workDir)
+	go processmanager.Kill(currentProcess)
 
-	t := time.After(4 * time.Second)
-	<-t
-
-	// KillCh <- 1
+	// t := time.After(4 * time.Second)
+	// <-t
+	// processmanager.KillCh <- 1
 	<-ExitCh
 }

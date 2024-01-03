@@ -9,6 +9,9 @@ import (
 var (
 	arg0    string = "go"
 	tmpFile string = "temp_prog_00000"
+
+	// KillCh is a channel that waits for a signal to kill a process
+	KillCh chan int = make(chan int, 1)
 )
 
 // RunFile is a function that starts executing a file in a new process and
@@ -54,14 +57,24 @@ func Run(file, dirCtx string) (*os.Process, error) {
 	return cmd.Process, nil
 }
 
-func Kill(proc *os.Process, killCh <-chan int) error {
-	<-killCh
+func Kill(proc *os.Process) error {
+	<-KillCh
 
 	err := proc.Kill()
 	if err != nil {
 		panic(err)
 	}
 
+	return nil
+}
+
+func Restart(proc *os.Process, file, dirCtx string) error {
+	p, err := Run(file, dirCtx)
+	if err != nil {
+		panic(err)
+	}
+
+	proc = p
 	return nil
 }
 

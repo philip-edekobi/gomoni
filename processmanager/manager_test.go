@@ -78,12 +78,10 @@ func TestKill(t *testing.T) {
 	proc, err := os.StartProcess(args[0], args, &procAttr)
 	require.Nil(t, err)
 
-	k := make(chan int, 2)
+	KillCh <- 1
+	Kill(proc)
 
-	k <- 1
-	k <- 2
-
-	Kill(proc, k)
-
-	require.Equal(t, 2, <-k)
+	procState, err := proc.Wait()
+	require.Nil(t, err)
+	require.NotEqual(t, 0, procState.ExitCode())
 }
