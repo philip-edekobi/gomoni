@@ -39,6 +39,12 @@ func WatchFiles(fileMap map[string]string) {
 			if event.Op&fsnotify.Write == fsnotify.Write {
 				fmt.Println("CHANGEEEEEE")
 			}
+		case err, ok := <-globalWatcher.Errors:
+			if !ok {
+				return
+			}
+
+			print("ERROR:", err)
 		}
 	}
 }
