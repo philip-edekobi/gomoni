@@ -2,6 +2,7 @@ package filewatcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -36,6 +37,10 @@ func WatchFiles(fileMap map[string]string) {
 				return
 			}
 
+			if !fileIsValid(event.Name) {
+				continue
+			}
+
 			if event.Op&fsnotify.Write == fsnotify.Write {
 				fmt.Println("CHANGEEEEEE")
 			}
@@ -47,4 +52,8 @@ func WatchFiles(fileMap map[string]string) {
 			print("ERROR:", err)
 		}
 	}
+}
+
+func fileIsValid(file string) bool {
+	return strings.HasSuffix(file, ".go") && !strings.HasSuffix(file, "_test.go")
 }
