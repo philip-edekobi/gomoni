@@ -22,23 +22,13 @@ var monitor = &types.Monitor{
 var sigs = make(chan os.Signal, 1)
 
 func main() {
-	workDir, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("an error occured: %v", err)
-	}
-
-	if len(os.Args) > 1 {
-		workDir, err = filepath.Abs(os.Args[1])
-		if err != nil {
-			log.Fatalf("an error occured: %v", err)
-		}
-	}
+	workDir := getWorkingDir()
 
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
 	go handleTerminate()
 
-	err = depmanager.BuildGlobalDirMap(workDir)
+	err := depmanager.BuildGlobalDirMap(workDir)
 	if err != nil {
 		log.Fatalf("could not build global directory map: %v", err)
 	}
@@ -69,4 +59,25 @@ func handleTerminate() {
 
 	processmanager.KillCh <- 1
 	monitor.ExitCh <- 1
+
+	err := os.Remove(getWorkingDir() + "/" + processmanager.TmpFile)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getWorkingDir() string {
+	workDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("an error occured: %v", err)
+	}
+
+	if len(os.Args) > 1 {
+		workDir, err = filepath.Abs(os.Args[1])
+		if err != nil {
+			log.Fatalf("an error occured: %v", err)
+		}
+	}
+
+	return workDir
 }

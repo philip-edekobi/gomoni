@@ -11,7 +11,7 @@ import (
 
 var (
 	arg0    string = "go"
-	tmpFile string = "temp_prog_00000"
+	TmpFile string = "temp_prog_00000"
 
 	// KillCh is a channel that waits for a signal to kill a process
 	KillCh chan int = make(chan int, 1)
@@ -21,7 +21,7 @@ var (
 // returns a pointer to a exec.Cmd and an error
 func Run(file, dirCtx string) (*os.Process, error) {
 	fmt.Println("[gomoni] - building")
-	cmd := exec.Command("go", "build", "-o", tmpFile)
+	cmd := exec.Command("go", "build", "-o", TmpFile)
 	cmd.Dir = dirCtx
 	err := cmd.Run()
 	if err != nil {
@@ -29,7 +29,7 @@ func Run(file, dirCtx string) (*os.Process, error) {
 	}
 
 	fmt.Println("[gomoni] - running...")
-	cmd = exec.Command("./" + tmpFile)
+	cmd = exec.Command("./" + TmpFile)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Dir = dirCtx
 	cmd.Stdout = os.Stdout
@@ -93,7 +93,7 @@ func WatchForEnd(proc *os.Process, dirCtx string) {
 		fmt.Println("[gomoni] - exit... waiting for changes to restart")
 	}
 
-	err = os.Remove(dirCtx + "/" + tmpFile)
+	err = os.Remove(dirCtx + "/" + TmpFile)
 	if err != nil {
 		panic(err)
 	}
