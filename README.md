@@ -7,13 +7,13 @@ It excludes test files and any file that is never used in the project.
 ## Installation
 
 ```bash
-$ go install github.com/philip-edekobi/gomoni@latest
+go install github.com/philip-edekobi/gomoni@latest
 ```
 
 ## Usage
 
 ```bash
-$ gomoni [folder]
+gomoni [folder]
 ```
 
 `folder` is optional if the current directory is the target folder
